@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Торгуй! UA — Купуй і продавай в Україні</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --blue:#1B6FE4;--orange:#F5A623;--red:#E24B4A;--green:#1D9E75;
+  --bg:#F5F5F7;--bg2:#EFEFEF;--white:#fff;
+  --text:#1a1a1a;--text2:#555;--text3:#999;
+  --border:#E0E0E0;--border2:#EBEBEB;
+  --radius:10px;--shadow:0 2px 8px rgba(0,0,0,.08);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:70px}
+
+/* HEADER */
+.header{background:var(--white);border-bottom:1px solid var(--border2);padding:0 1.5rem;display:flex;align-items:center;gap:1rem;height:58px;position:sticky;top:0;z-index:150;box-shadow:var(--shadow)}
+.logo{display:flex;align-items:center;gap:7px;cursor:pointer;text-decoration:none}
+.logo-icon{width:34px;height:34px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#fff;letter-spacing:-1px}
+.logo-text{font-size:21px;font-weight:700;letter-spacing:-0.5px;color:var(--text)}
+.logo-text span{color:var(--blue)}
+.logo-ua{font-size:10px;font-weight:700;color:var(--blue);background:#E8F0FD;padding:2px 5px;border-radius:4px;margin-left:2px;align-self:flex-end;margin-bottom:3px}
+.search-bar{flex:1;display:flex;max-width:540px}
+.search-bar select{height:38px;padding:0 10px;border:1.5px solid var(--blue);border-right:none;border-radius:8px 0 0 8px;font-size:13px;background:#F0F5FF;color:var(--text2);outline:none;cursor:pointer}
+.search-bar input{flex:1;height:38px;padding:0 14px;border:1.5px solid var(--blue);border-right:none;border-left:none;font-size:14px;background:#fff;color:var(--text);outline:none}
+.search-bar button{height:38px;padding:0 18px;background:var(--blue);color:#fff;border:none;border-radius:0 8px 8px 0;font-size:13px;font-weight:600;cursor:pointer}
+.hdr-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.btn-login{padding:7px 14px;border:1.5px solid var(--blue);color:var(--blue);border-radius:8px;font-size:13px;font-weight:600;background:transparent;cursor:pointer}
+.btn-post-hdr{padding:7px 16px;background:var(--orange);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.mini-av{width:33px;height:33px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;cursor:pointer}
+
+/* PAGES */
+.page{display:none}.page.active{display:block}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:62px;background:#fff;border-top:1px solid var(--border2);display:flex;align-items:stretch;z-index:200;box-shadow:0 -2px 10px rgba(0,0,0,.06)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:none;background:none;color:var(--text3);font-size:11px;position:relative;font-family:inherit}
+.nav-item.active{color:var(--blue)}
+.nav-item svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-item.active svg{stroke:var(--blue)}
+.nav-post-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:none;background:none;font-size:11px;color:var(--text3);font-family:inherit}
+.post-circle{width:46px;height:46px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-top:-18px;box-shadow:0 4px 12px rgba(245,166,35,.45)}
+.post-circle svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.nbadge{position:absolute;top:6px;right:calc(50% - 18px);background:var(--red);color:#fff;font-size:9px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px}
+
+/* HOME */
+.nav-cats{background:#fff;border-bottom:1px solid var(--border2);padding:0 1.5rem;display:flex;overflow-x:auto}
+.nav-cat{padding:10px 14px;font-size:13px;color:var(--text2);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .15s}
+.nav-cat:hover{color:var(--text)}
+.nav-cat.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+.home-inner{max-width:1200px;margin:0 auto;padding:1.5rem;display:grid;grid-template-columns:220px 1fr;gap:1.5rem}
+.sidebar{display:flex;flex-direction:column;gap:12px}
+.fbox{background:#fff;border:1px solid var(--border2);border-radius:var(--radius);padding:1rem}
+.ftitle{font-size:13px;font-weight:600;margin-bottom:10px}
+.fopt{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);padding:3px 0;cursor:pointer}
+.fopt input{accent-color:var(--blue)}
+.price-row{display:flex;gap:6px;margin-top:4px}
+.price-row input{flex:1;height:32px;padding:0 8px;border:1px solid var(--border);border-radius:7px;font-size:13px;outline:none;width:0}
+.fapply{width:100%;margin-top:10px;padding:8px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.content-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.rcnt{font-size:14px;color:var(--text2)}
+.sort-sel{height:32px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;cursor:pointer;background:#fff}
+.ads-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:12px}
+.ad-card{background:#fff;border:1px solid var(--border2);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:border-color .15s,transform .1s,box-shadow .1s}
+.ad-card:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:0 4px 16px rgba(27,111,228,.12)}
+.ad-img{width:100%;height:130px;display:flex;align-items:center;justify-content:center;font-size:40px;background:var(--bg2)}
+.ad-body{padding:10px 12px 12px}
+.ad-price{font-size:15px;font-weight:700;margin-bottom:2px}
+.ad-title{font-size:13px;color:var(--text2);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ad-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--text3)}
+.abd{display:inline-block;font-size:10px;padding:2px 6px;border-radius:4px;margin-right:2px;font-weight:600}
+.abd-new{background:#E8F0FD;color:var(--blue)}
+.abd-top{background:#FEF3E2;color:#C07A10}
+.fav-btn{float:right;background:none;border:none;cursor:pointer;font-size:16px;color:var(--text3);transition:color .1s}
+.fav-btn.active{color:var(--red)}
+.hero-band{background:var(--blue);border-radius:12px;padding:1.25rem 1.75rem;display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem}
+.hero-band h2{font-size:19px;font-weight:700;color:#fff;margin-bottom:4px}
+.hero-band p{font-size:13px;color:rgba(255,255,255,.75)}
+.hero-btn{padding:9px 20px;background:#fff;color:var(--blue);border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem}
+.scard{background:#fff;border:1px solid var(--border2);border-radius:var(--radius);padding:12px;text-align:center}
+.snum{font-size:18px;font-weight:700;color:var(--blue)}
+.slbl{font-size:11px;color:var(--text3);margin-top:2px}
+.promo-box{background:var(--blue);border-radius:var(--radius);padding:1rem;cursor:pointer;border:none}
+.promo-box:hover{opacity:.9}
+
+/* AD DETAIL */
+.detail-wrap{max-width:900px;margin:0 auto;padding:1.5rem}
+.breadcrumb{font-size:13px;color:var(--text3);margin-bottom:1rem;cursor:pointer}
+.breadcrumb span{color:var(--blue)}
+.detail-grid{display:grid;grid-template-columns:1fr 310px;gap:1.5rem}
+.detail-imgs{background:#fff;border:1px solid var(--border2);border-radius:12px;overflow:hidden}
+.main-img{width:100%;height:300px;display:flex;align-items:center;justify-content:center;font-size:80px;background:var(--bg2)}
+.thumb-row{display:flex;gap:8px;padding:12px}
+.thumb{width:64px;height:64px;border-radius:8px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;border:2px solid transparent;transition:border-color .15s}
+.thumb.active{border-color:var(--blue)}
+.det-price-card,.seller-card,.desc-card{background:#fff;border:1px solid var(--border2);border-radius:12px;padding:1.25rem}
+.detail-info{display:flex;flex-direction:column;gap:12px}
+.det-price{font-size:28px;font-weight:800;margin-bottom:4px}
+.det-title-sm{font-size:14px;color:var(--text2);margin-bottom:10px}
+.det-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem}
+.det-tag{font-size:12px;padding:3px 10px;border-radius:20px;background:var(--bg2);color:var(--text2)}
+.contact-btn{width:100%;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;transition:background .15s}
+.contact-btn:hover{background:#155DC4}
+.safe-btn{width:100%;padding:11px;background:#EAF3DE;color:#2E6B00;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+.seller-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.seller-av{width:44px;height:44px;border-radius:50%;background:#E8F0FD;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:var(--blue)}
+.desc-title{font-size:14px;font-weight:600;margin-bottom:8px}
+.desc-text{font-size:14px;color:var(--text2);line-height:1.7}
+
+/* CHAT */
+.chat-wrap{max-width:900px;margin:0 auto;display:grid;grid-template-columns:280px 1fr;height:calc(100vh - 132px);background:#fff;border:1px solid var(--border2);border-radius:12px;margin-top:1rem;overflow:hidden;margin-left:auto;margin-right:auto}
+.chat-list{border-right:1px solid var(--border2);overflow-y:auto}
+.chat-list-hdr{padding:1rem 1.25rem;font-size:15px;font-weight:700;border-bottom:1px solid var(--border2)}
+.chat-item{padding:12px 1.25rem;display:flex;gap:10px;cursor:pointer;border-bottom:1px solid var(--border2);transition:background .1s;align-items:center}
+.chat-item:hover,.chat-item.active{background:#E8F0FD}
+.ci-av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0}
+.ci-body{flex:1;min-width:0}
+.ci-name{font-size:14px;font-weight:600;margin-bottom:2px}
+.ci-prev{font-size:13px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci-time{font-size:11px;color:var(--text3);white-space:nowrap}
+.ci-unread{width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0}
+.chat-main{display:flex;flex-direction:column;background:var(--bg)}
+.chat-hdr{background:#fff;border-bottom:1px solid var(--border2);padding:12px 1.25rem;display:flex;align-items:center;gap:10px}
+.chat-hdr-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff}
+.chat-hdr-name{font-size:14px;font-weight:600}
+.chat-hdr-status{font-size:12px;color:var(--green)}
+.chat-product{margin:12px 1.25rem 0;padding:10px 12px;background:#fff;border:1px solid var(--border2);border-radius:10px;display:flex;gap:10px;align-items:center}
+.cp-img{width:44px;height:44px;border-radius:8px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:20px}
+.cp-title{font-size:13px;font-weight:600}
+.cp-price{font-size:13px;color:var(--blue);font-weight:700}
+.chat-messages{flex:1;overflow-y:auto;padding:1rem 1.25rem;display:flex;flex-direction:column;gap:10px}
+.msg-row{display:flex;gap:8px;align-items:flex-end}
+.msg-row.mine{flex-direction:row-reverse}
+.msg-bubble{max-width:70%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.5}
+.msg-row:not(.mine) .msg-bubble{background:#fff;border-bottom-left-radius:4px;box-shadow:var(--shadow)}
+.msg-row.mine .msg-bubble{background:var(--blue);color:#fff;border-bottom-right-radius:4px}
+.msg-time-lbl{font-size:10px;opacity:.6;margin-top:4px;text-align:right}
+.msg-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.chat-input-row{padding:12px 1.25rem;background:#fff;border-top:1px solid var(--border2);display:flex;gap:10px;align-items:center}
+.chat-input{flex:1;height:40px;padding:0 14px;border:1px solid var(--border);border-radius:20px;font-size:14px;background:var(--bg);color:var(--text);outline:none;font-family:inherit}
+.chat-input:focus{border-color:var(--blue)}
+.chat-send{width:40px;height:40px;background:var(--blue);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.chat-send:hover{background:#155DC4}
+.chat-send svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* PRICING */
+.pricing-wrap{max-width:900px;margin:0 auto;padding:1.5rem}
+.pricing-hdr{text-align:center;margin-bottom:2rem}
+.pricing-hdr h2{font-size:26px;font-weight:800;margin-bottom:8px}
+.pricing-hdr p{font-size:15px;color:var(--text2)}
+.plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:2rem}
+.plan-card{background:#fff;border:1px solid var(--border2);border-radius:14px;padding:1.5rem;position:relative;transition:transform .15s,box-shadow .15s}
+.plan-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.1)}
+.plan-card.popular{border-color:var(--blue);border-width:2px}
+.plan-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;font-size:11px;font-weight:700;padding:3px 14px;border-radius:20px;white-space:nowrap}
+.plan-name{font-size:16px;font-weight:700;margin-bottom:4px}
+.plan-price{font-size:30px;font-weight:800;color:var(--blue);margin-bottom:4px}
+.plan-price span{font-size:14px;font-weight:400;color:var(--text2)}
+.plan-desc{font-size:13px;color:var(--text2);margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border2)}
+.pf{font-size:13px;color:var(--text2);padding:4px 0;display:flex;gap:8px}
+.ok{color:var(--green)}.no{color:var(--text3)}
+.plan-btn{width:100%;padding:11px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-top:1.25rem;transition:opacity .15s}
+.plan-btn:hover{opacity:.85}
+.pb-free{background:var(--bg2);color:var(--text)}
+.pb-pop{background:var(--blue);color:#fff}
+.pb-pro{background:#0F4B9A;color:#fff}
+.boost-section{background:#fff;border:1px solid var(--border2);border-radius:14px;padding:1.5rem}
+.boost-title{font-size:17px;font-weight:700;margin-bottom:1rem}
+.boost-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.boost-card{border:1px solid var(--border2);border-radius:10px;padding:1rem;text-align:center;cursor:pointer;transition:border-color .15s,transform .1s}
+.boost-card:hover{border-color:var(--blue);transform:translateY(-2px)}
+.boost-icon{font-size:30px;margin-bottom:6px}
+.boost-name{font-size:13px;font-weight:700;margin-bottom:3px}
+.boost-price{font-size:17px;font-weight:800;color:var(--blue);margin-bottom:3px}
+.boost-desc{font-size:12px;color:var(--text3)}
+
+/* MAP */
+.map-page-wrap{height:calc(100vh - 130px);display:flex;flex-direction:column}
+.map-layout{display:grid;grid-template-columns:290px 1fr;flex:1;overflow:hidden}
+.map-list{overflow-y:auto;background:#fff;border-right:1px solid var(--border2)}
+.map-list-hdr{padding:12px 14px;border-bottom:1px solid var(--border2);font-size:14px;font-weight:600;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:10}
+.map-ad-card{padding:12px 14px;display:flex;gap:10px;cursor:pointer;border-bottom:1px solid var(--border2);transition:background .1s}
+.map-ad-card:hover,.map-ad-card.active{background:#E8F0FD}
+.map-ad-img{width:56px;height:56px;border-radius:8px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.map-ad-price{font-size:14px;font-weight:700;color:var(--blue)}
+.map-ad-title{font-size:12px;color:var(--text2);margin:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.map-ad-city{font-size:11px;color:var(--text3)}
+#map{width:100%;height:100%}
+.map-controls{position:absolute;top:12px;right:12px;z-index:1000;display:flex;flex-direction:column;gap:8px}
+.map-ctrl-btn{background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;box-shadow:var(--shadow);display:flex;align-items:center;gap:5px;white-space:nowrap;font-family:inherit}
+.map-ctrl-btn:hover{background:var(--bg)}
+
+/* FAVORITES */
+.fav-wrap{max-width:1100px;margin:0 auto;padding:1.5rem}
+.pg-title{font-size:22px;font-weight:700;margin-bottom:1.25rem}
+.empty-st{text-align:center;padding:4rem;color:var(--text3)}
+
+/* AUTH */
+.auth-wrap{min-height:calc(100vh - 130px);display:flex;align-items:center;justify-content:center;padding:2rem 1rem}
+.auth-card{background:#fff;border:1px solid var(--border2);border-radius:16px;width:420px;max-width:100%;box-shadow:0 8px 32px rgba(0,0,0,.08)}
+.auth-hdr{padding:2rem 2rem 1.5rem;text-align:center}
+.auth-logo{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:1.5rem}
+.auth-logo-icon{width:46px;height:46px;background:var(--blue);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff}
+.auth-logo-text{font-size:26px;font-weight:800;letter-spacing:-0.5px}
+.auth-logo-text span{color:var(--blue)}
+.auth-tabs{display:flex;background:var(--bg2);border-radius:10px;padding:3px;margin-bottom:0}
+.auth-tab{flex:1;padding:9px;text-align:center;font-size:14px;border-radius:8px;cursor:pointer;color:var(--text2);border:none;background:transparent;font-family:inherit;font-weight:500;transition:all .15s}
+.auth-tab.active{background:#fff;color:var(--text);font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.auth-body{padding:1.5rem 2rem 2rem}
+.fg{margin-bottom:14px}
+.fg label{font-size:13px;color:var(--text2);margin-bottom:5px;display:block;font-weight:500}
+.fi{width:100%;height:44px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:#fff;color:var(--text);outline:none;font-family:inherit;transition:border-color .15s}
+.fi:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(27,111,228,.1)}
+.fw{width:100%}
+textarea.fi{height:auto;min-height:80px;padding:10px 14px;resize:vertical}
+.err{font-size:12px;color:var(--red);margin-top:4px;display:none}
+.err.show{display:block}
+.input-wrap{position:relative}
+.eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;color:var(--text3)}
+.sub-btn{width:100%;height:46px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s}
+.sub-btn:hover{background:#155DC4}
+.divider{display:flex;align-items:center;gap:12px;margin:1.25rem 0}
+.div-line{flex:1;height:1px;background:var(--border2)}
+.div-txt{font-size:13px;color:var(--text3);white-space:nowrap}
+.social-btns{display:flex;gap:10px}
+.soc-btn{flex:1;height:44px;border:1.5px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;font-weight:600;color:var(--text2);font-family:inherit;transition:border-color .15s}
+.soc-btn:hover{border-color:var(--blue)}
+.step-ind{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:1.5rem}
+.sd{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all .2s}
+.sd.active{background:var(--blue);width:24px;border-radius:4px}
+.sd.done{background:var(--green)}
+.otp-inputs{display:flex;gap:10px;justify-content:center;margin-bottom:1.25rem}
+.otp-i{width:54px;height:58px;border:1.5px solid var(--border);border-radius:10px;font-size:24px;font-weight:700;text-align:center;background:#fff;color:var(--text);outline:none;font-family:inherit;transition:border-color .15s}
+.otp-i:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(27,111,228,.1)}
+.back-btn{width:100%;margin-top:10px;padding:10px;border:1px solid var(--border);border-radius:10px;background:transparent;font-size:14px;cursor:pointer;color:var(--text2);font-family:inherit}
+.success-screen{text-align:center;padding:1rem 0 .5rem}
+.success-icon{width:68px;height:68px;background:#EAF3DE;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 1rem}
+.success-title{font-size:19px;font-weight:700;margin-bottom:6px}
+.success-sub{font-size:14px;color:var(--text2);margin-bottom:1.5rem;line-height:1.6}
+
+/* CABINET */
+.cab-wrap{max-width:680px;margin:0 auto;padding:1.5rem}
+.profile-card{background:#fff;border:1px solid var(--border2);border-radius:12px;padding:1.5rem;display:flex;align-items:center;gap:1rem;margin-bottom:1rem}
+.cab-av{width:66px;height:66px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;flex-shrink:0}
+.prof-name{font-size:18px;font-weight:700;margin-bottom:3px}
+.prof-meta{font-size:13px;color:var(--text3)}
+.prof-edit{margin-left:auto;padding:7px 14px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:transparent;color:var(--text);cursor:pointer;font-family:inherit}
+.s-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1rem}
+.sc{background:#fff;border:1px solid var(--border2);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:border-color .15s,transform .1s}
+.sc:hover{border-color:var(--blue);transform:translateY(-1px)}
+.scn{font-size:24px;font-weight:800;color:var(--blue)}
+.scl{font-size:12px;color:var(--text3);margin-top:3px}
+.msec{background:#fff;border:1px solid var(--border2);border-radius:12px;overflow:hidden;margin-bottom:1rem}
+.mi{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;border-bottom:1px solid var(--border2);font-size:14px;transition:background .1s}
+.mi:last-child{border-bottom:none}
+.mi:hover{background:var(--bg)}
+.mi-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.mi-arr{margin-left:auto;color:var(--text3);font-size:18px}
+.mi-sub{font-size:12px;color:var(--text3);margin-top:1px}
+.logout-btn{width:100%;padding:12px;border:1px solid #F09595;border-radius:8px;background:transparent;color:var(--red);font-size:14px;cursor:pointer;font-family:inherit;transition:background .15s}
+.logout-btn:hover{background:#FCEBEB}
+
+/* POST MODAL */
+.modal-bd{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;align-items:center;justify-content:center}
+.modal-bd.open{display:flex}
+.modal{background:#fff;border-radius:14px;width:580px;max-width:95vw;max-height:88vh;overflow-y:auto;padding:1.5rem;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.mhdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.mtitle{font-size:17px;font-weight:700}
+.mclose{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text2);line-height:1}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.photo-upload{border:2px dashed var(--border);border-radius:10px;padding:1.5rem;text-align:center;cursor:pointer;margin-bottom:14px;transition:border-color .15s,background .15s}
+.photo-upload:hover{border-color:var(--blue);background:#F0F5FF}
+.ph-previews{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ph-prev{width:70px;height:70px;border-radius:8px;position:relative;overflow:hidden;border:1px solid var(--border)}
+.ph-prev img{width:100%;height:100%;object-fit:cover}
+.ph-del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.msubmit{width:100%;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;font-family:inherit;transition:background .15s}
+.msubmit:hover{background:#155DC4}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo" onclick="goPage('home')">
+    <div class="logo-icon">Т</div>
+    <div class="logo-text">Торгуй<span>!</span></div>
+    <div class="logo-ua">UA</div>
+  </div>
+  <div class="search-bar">
+    <select>
+      <option>Всі категорії</option><option>Електроніка</option><option>Авто</option>
+      <option>Нерухомість</option><option>Одяг</option>
+    </select>
+    <input type="text" id="search-input" placeholder="Шукай що завгодно..." />
+    <button onclick="doSearch()">Знайти</button>
+  </div>
+  <div class="hdr-right" id="hdr-right">
+    <button class="btn-login" onclick="goPage('auth')">Увійти</button>
+    <button class="btn-post-hdr" onclick="openPost()">+ Подати</button>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div class="nav-cats">
+    <div class="nav-cat active" onclick="setCat(this,'all')">Усі</div>
+    <div class="nav-cat" onclick="setCat(this,'electronics')">📱 Електроніка</div>
+    <div class="nav-cat" onclick="setCat(this,'auto')">🚗 Авто</div>
+    <div class="nav-cat" onclick="setCat(this,'realty')">🏠 Нерухомість</div>
+    <div class="nav-cat" onclick="setCat(this,'clothes')">👗 Одяг</div>
+    <div class="nav-cat" onclick="setCat(this,'home')">🛋 Для дому</div>
+    <div class="nav-cat" onclick="setCat(this,'sport')">🚲 Спорт</div>
+    <div class="nav-cat" onclick="setCat(this,'animals')">🐕 Тварини</div>
+  </div>
+  <div class="home-inner">
+    <div class="sidebar">
+      <div class="fbox">
+        <div class="ftitle">Стан товару</div>
+        <label class="fopt"><input type="checkbox" checked> Нове</label>
+        <label class="fopt"><input type="checkbox" checked> Вживане</label>
+      </div>
+      <div class="fbox">
+        <div class="ftitle">Ціна, ₴</div>
+        <div class="price-row"><input type="number" placeholder="від"><input type="number" placeholder="до"></div>
+        <button class="fapply">Застосувати</button>
+      </div>
+      <div class="fbox">
+        <div class="ftitle">Місто</div>
+        <label class="fopt"><input type="radio" name="city" checked> Київ</label>
+        <label class="fopt"><input type="radio" name="city"> Харків</label>
+        <label class="fopt"><input type="radio" name="city"> Одеса</label>
+        <label class="fopt"><input type="radio" name="city"> Львів</label>
+        <label class="fopt"><input type="radio" name="city"> Дніпро</label>
+      </div>
+      <button class="promo-box" onclick="goPage('pricing')">
+        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">⭐ ТОП просування</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.75)">Більше переглядів — більше продажів</div>
+        <div style="font-size:13px;font-weight:700;color:#FFD166;margin-top:6px">Від 29 ₴ →</div>
+      </button>
+    </div>
+    <div>
+      <div class="hero-band">
+        <div><h2>Купуй і продавай в Україні 🇺🇦</h2><p>Мільйони оголошень від приватних осіб та магазинів</p></div>
+        <button class="hero-btn" onclick="openPost()">Продати зараз</button>
+      </div>
+      <div class="stat-row">
+        <div class="scard"><div class="snum">2.4M+</div><div class="slbl">активних оголошень</div></div>
+        <div class="scard"><div class="snum">850K+</div><div class="slbl">користувачів</div></div>
+        <div class="scard"><div class="snum">24 обл.</div><div class="slbl">охоплення</div></div>
+      </div>
+      <div class="content-hdr">
+        <div class="rcnt" id="rcnt">Знайдено 15 оголошень</div>
+        <select class="sort-sel"><option>За датою: нові</option><option>Ціна ↑</option><option>Ціна ↓</option></select>
+      </div>
+      <div class="ads-grid" id="ads-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- AD DETAIL -->
+<div class="page" id="page-detail">
+  <div class="detail-wrap">
+    <div class="breadcrumb" onclick="goPage('home')">← <span>Назад до оголошень</span></div>
+    <div class="detail-grid">
+      <div>
+        <div class="detail-imgs">
+          <div class="main-img" id="det-main-img">📱</div>
+          <div class="thumb-row" id="det-thumbs"></div>
+        </div>
+        <div class="desc-card" style="margin-top:12px">
+          <div class="desc-title">Опис</div>
+          <div class="desc-text" id="det-desc"></div>
+        </div>
+      </div>
+      <div class="detail-info">
+        <div class="det-price-card">
+          <div class="det-price" id="det-price"></div>
+          <div class="det-title-sm" id="det-title"></div>
+          <div class="det-meta" id="det-meta"></div>
+          <button class="contact-btn" onclick="goPage('chat')">💬 Написати продавцю</button>
+          <button class="safe-btn">🔒 Безпечна угода</button>
+        </div>
+        <div class="seller-card">
+          <div class="seller-row">
+            <div class="seller-av" id="det-seller-av">А</div>
+            <div>
+              <div style="font-size:14px;font-weight:600" id="det-seller-name"></div>
+              <div style="font-size:12px;color:var(--text3)" id="det-seller-since"></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <div style="font-size:12px;background:#EAF3DE;color:#2E6B00;padding:3px 10px;border-radius:20px;font-weight:600">★ 4.9</div>
+            <div style="font-size:12px;background:#E8F0FD;color:var(--blue);padding:3px 10px;border-radius:20px;font-weight:600">Перевірений</div>
+          </div>
+        </div>
+        <div class="seller-card">
+          <div style="font-size:13px;color:var(--text3);margin-bottom:6px">📍 Місцезнаходження</div>
+          <div id="det-city" style="font-size:15px;font-weight:600"></div>
+          <div style="margin-top:10px;background:var(--bg2);border-radius:8px;height:80px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text3);cursor:pointer" onclick="goPage('map')">🗺 Переглянути на карті →</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div class="page" id="page-chat">
+  <div style="max-width:900px;margin:1rem auto;padding:0 1rem">
+    <div class="chat-wrap">
+      <div class="chat-list">
+        <div class="chat-list-hdr">Повідомлення</div>
+        <div class="chat-item active" onclick="selectChat(0)">
+          <div class="ci-av" style="background:var(--blue)">О</div>
+          <div class="ci-body"><div class="ci-name">Олексій К.</div><div class="ci-prev">iPhone 15 Pro — Ще актуально?</div></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><div class="ci-time">14:32</div><div class="ci-unread"></div></div>
+        </div>
+        <div class="chat-item" onclick="selectChat(1)">
+          <div class="ci-av" style="background:#3B6D11">М</div>
+          <div class="ci-body"><div class="ci-name">Марина В.</div><div class="ci-prev">Дякую, домовились!</div></div>
+          <div class="ci-time">вчора</div>
+        </div>
+        <div class="chat-item" onclick="selectChat(2)">
+          <div class="ci-av" style="background:#C07A10">Т</div>
+          <div class="ci-body"><div class="ci-name">TechStore</div><div class="ci-prev">Можемо зустрітись у середу?</div></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><div class="ci-time">пн</div><div class="ci-unread"></div></div>
+        </div>
+      </div>
+      <div class="chat-main">
+        <div class="chat-hdr">
+          <div class="chat-hdr-av" id="chat-hdr-av" style="background:var(--blue)">О</div>
+          <div><div class="chat-hdr-name" id="chat-hdr-name">Олексій К.</div><div class="chat-hdr-status">● онлайн</div></div>
+        </div>
+        <div class="chat-product">
+          <div class="cp-img">📱</div>
+          <div><div class="cp-title">iPhone 15 Pro 256GB</div><div class="cp-price">36 500 ₴</div></div>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-row">
+          <input class="chat-input" id="chat-input" placeholder="Написати повідомлення..." onkeydown="if(event.key==='Enter')sendMsg()" />
+          <button class="chat-send" onclick="sendMsg()">
+            <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAP -->
+<div class="page" id="page-map">
+  <div class="map-page-wrap">
+    <div style="padding:12px 1.5rem;background:#fff;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:12px">
+      <div style="font-size:16px;font-weight:700">🗺 Оголошення на карті</div>
+      <select class="sort-sel" style="margin-left:auto" onchange="filterMapCat(this.value)">
+        <option value="all">Всі категорії</option><option value="electronics">📱 Електроніка</option>
+        <option value="auto">🚗 Авто</option><option value="realty">🏠 Нерухомість</option>
+      </select>
+    </div>
+    <div class="map-layout">
+      <div class="map-list">
+        <div class="map-list-hdr"><span>Оголошення</span><span id="map-count" style="font-size:12px;color:var(--text3);background:var(--bg2);padding:2px 8px;border-radius:10px">15</span></div>
+        <div id="map-ad-list"></div>
+      </div>
+      <div style="position:relative">
+        <div id="map"></div>
+        <div class="map-controls">
+          <button class="map-ctrl-btn" onclick="mapObj.setView([48.5,31.5],6)">🇺🇦 Вся Україна</button>
+          <button class="map-ctrl-btn" onclick="mapObj.setView([50.45,30.52],11)">📍 Київ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<div class="page" id="page-pricing">
+  <div class="pricing-wrap">
+    <div class="pricing-hdr"><h2>Тарифи та просування</h2><p>Продавайте швидше з інструментами Торгуй!</p></div>
+    <div class="plans-grid">
+      <div class="plan-card">
+        <div class="plan-name">Безкоштовний</div>
+        <div class="plan-price">0 <span>₴/міс</span></div>
+        <div class="plan-desc">Для приватних осіб</div>
+        <div class="pf"><span class="ok">✓</span> До 5 оголошень</div>
+        <div class="pf"><span class="ok">✓</span> До 5 фото</div>
+        <div class="pf"><span class="ok">✓</span> Чат з покупцями</div>
+        <div class="pf"><span class="no">✕</span> ТОП просування</div>
+        <div class="pf"><span class="no">✕</span> Статистика переглядів</div>
+        <div class="pf"><span class="no">✕</span> Сторінка магазину</div>
+        <button class="plan-btn pb-free">Поточний план</button>
+      </div>
+      <div class="plan-card popular">
+        <div class="plan-badge">Найпопулярніший</div>
+        <div class="plan-name">Базовий</div>
+        <div class="plan-price">199 <span>₴/міс</span></div>
+        <div class="plan-desc">Для активних продавців</div>
+        <div class="pf"><span class="ok">✓</span> До 30 оголошень</div>
+        <div class="pf"><span class="ok">✓</span> До 15 фото</div>
+        <div class="pf"><span class="ok">✓</span> Статистика переглядів</div>
+        <div class="pf"><span class="ok">✓</span> 3 ТОП безкоштовно</div>
+        <div class="pf"><span class="no">✕</span> Сторінка магазину</div>
+        <div class="pf"><span class="no">✕</span> Пріоритетна підтримка</div>
+        <button class="plan-btn pb-pop">Обрати план</button>
+      </div>
+      <div class="plan-card">
+        <div class="plan-name">Про</div>
+        <div class="plan-price">499 <span>₴/міс</span></div>
+        <div class="plan-desc">Для бізнесу та магазинів</div>
+        <div class="pf"><span class="ok">✓</span> Необмежені оголошення</div>
+        <div class="pf"><span class="ok">✓</span> До 30 фото</div>
+        <div class="pf"><span class="ok">✓</span> Повна аналітика</div>
+        <div class="pf"><span class="ok">✓</span> 10 ТОП безкоштовно</div>
+        <div class="pf"><span class="ok">✓</span> Сторінка магазину</div>
+        <div class="pf"><span class="ok">✓</span> Пріоритетна підтримка</div>
+        <button class="plan-btn pb-pro">Обрати план</button>
+      </div>
+    </div>
+    <div class="boost-section">
+      <div class="boost-title">🚀 Разове просування оголошення</div>
+      <div class="boost-grid">
+        <div class="boost-card"><div class="boost-icon">⬆️</div><div class="boost-name">Підняти вгору</div><div class="boost-price">29 ₴</div><div class="boost-desc">Стане першим у списку на 24 год.</div></div>
+        <div class="boost-card"><div class="boost-icon">⭐</div><div class="boost-name">ТОП на 7 днів</div><div class="boost-price">79 ₴</div><div class="boost-desc">Значок ТОП + пріоритет у пошуку</div></div>
+        <div class="boost-card"><div class="boost-icon">👑</div><div class="boost-name">VIP на 30 днів</div><div class="boost-price">199 ₴</div><div class="boost-desc">Виділення кольором + банер + ТОП</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FAVORITES -->
+<div class="page" id="page-favorites">
+  <div class="fav-wrap">
+    <div class="pg-title">Обране ♡</div>
+    <div id="fav-grid" class="ads-grid"></div>
+    <div id="fav-empty" class="empty-st" style="display:none">
+      <div style="font-size:52px;margin-bottom:12px">♡</div>
+      <div style="font-size:16px;color:var(--text2);margin-bottom:6px;font-weight:600">Тут поки нічого немає</div>
+      <div style="font-size:13px">Натисни ♡ на оголошенні щоб зберегти</div>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH -->
+<div class="page" id="page-auth">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-hdr">
+        <div class="auth-logo">
+          <div class="auth-logo-icon">Т</div>
+          <div class="auth-logo-text">Торгуй<span>!</span></div>
+        </div>
+        <div class="auth-tabs">
+          <button class="auth-tab active" onclick="switchTab('login')">Увійти</button>
+          <button class="auth-tab" onclick="switchTab('register')">Реєстрація</button>
+        </div>
+      </div>
+      <!-- LOGIN -->
+      <div class="auth-body" id="auth-login">
+        <div class="fg"><label>Телефон або email</label><input class="fi fw" id="l-phone" type="text" placeholder="+380 або email@..."/><div class="err" id="l-phone-err">Введіть коректний телефон або email</div></div>
+        <div class="fg"><label>Пароль</label><div class="input-wrap"><input class="fi fw" id="l-pass" type="password" placeholder="Пароль"/><span class="eye" onclick="toggleEye('l-pass',this)">👁</span></div><div class="err" id="l-pass-err">Мінімум 6 символів</div></div>
+        <div style="text-align:right;margin-bottom:14px"><a style="font-size:13px;color:var(--blue);cursor:pointer" onclick="showForgot()">Забули пароль?</a></div>
+        <button class="sub-btn" onclick="doLogin()">Увійти</button>
+        <div class="divider"><div class="div-line"></div><div class="div-txt">або через</div><div class="div-line"></div></div>
+        <div class="social-btns">
+          <button class="soc-btn" onclick="socialLogin('Google')"><b style="font-size:15px">G</b> Google</button>
+          <button class="soc-btn" onclick="socialLogin('Apple')"><b>⌘</b> Apple</button>
+        </div>
+      </div>
+      <!-- REGISTER -->
+      <div class="auth-body" id="auth-register" style="display:none">
+        <div id="rs1">
+          <div class="step-ind"><div class="sd active"></div><div class="sd"></div><div class="sd"></div></div>
+          <div class="fg"><label>Ім'я</label><input class="fi fw" id="r-name" type="text" placeholder="Як вас звати?"/><div class="err" id="r-name-err">Введіть ваше ім'я</div></div>
+          <div class="fg"><label>Телефон</label><input class="fi fw" id="r-phone" type="text" placeholder="+380 XX XXX XX XX"/><div class="err" id="r-phone-err">Введіть коректний номер</div></div>
+          <div class="fg"><label>Email</label><input class="fi fw" id="r-email" type="email" placeholder="your@email.com"/><div class="err" id="r-email-err">Введіть коректний email</div></div>
+          <button class="sub-btn" onclick="regS1()">Далі →</button>
+        </div>
+        <div id="rs2" style="display:none">
+          <div class="step-ind"><div class="sd done"></div><div class="sd active"></div><div class="sd"></div></div>
+          <div style="text-align:center;margin-bottom:1.25rem"><div style="font-size:15px;font-weight:700;margin-bottom:4px">Підтвердіть номер</div><div style="font-size:13px;color:var(--text3)">Код надіслано на <b id="sent-ph" style="color:var(--text)"></b></div></div>
+          <div class="otp-inputs"><input class="otp-i" maxlength="1" oninput="otpN(this,0)"/><input class="otp-i" maxlength="1" oninput="otpN(this,1)"/><input class="otp-i" maxlength="1" oninput="otpN(this,2)"/><input class="otp-i" maxlength="1" oninput="otpN(this,3)"/></div>
+          <div style="text-align:center;font-size:13px;color:var(--text3);margin-bottom:1rem">Не отримали? <a style="color:var(--blue);cursor:pointer">Надіслати ще раз</a></div>
+          <button class="sub-btn" onclick="regS2()">Підтвердити</button>
+          <button class="back-btn" onclick="showStep(1)">← Назад</button>
+        </div>
+        <div id="rs3" style="display:none">
+          <div class="step-ind"><div class="sd done"></div><div class="sd done"></div><div class="sd active"></div></div>
+          <div class="fg"><label>Пароль</label><div class="input-wrap"><input class="fi fw" id="r-pass" type="password" placeholder="Мінімум 6 символів"/><span class="eye" onclick="toggleEye('r-pass',this)">👁</span></div><div class="err" id="r-pass-err">Мінімум 6 символів</div></div>
+          <div class="fg"><label>Повторіть пароль</label><div class="input-wrap"><input class="fi fw" id="r-pass2" type="password" placeholder="Ще раз"/><span class="eye" onclick="toggleEye('r-pass2',this)">👁</span></div><div class="err" id="r-pass2-err">Паролі не співпадають</div></div>
+          <div class="fg"><label class="fopt" style="font-size:13px"><input type="checkbox" id="r-agree" style="accent-color:var(--blue)"> Погоджуюсь з <a style="color:var(--blue)">Умовами</a> та <a style="color:var(--blue)">Політикою</a></label><div class="err" id="r-agree-err">Потрібно погодитись</div></div>
+          <button class="sub-btn" onclick="regS3()">Зареєструватись</button>
+        </div>
+        <div id="rs-ok" style="display:none">
+          <div class="success-screen">
+            <div class="success-icon">✓</div>
+            <div class="success-title">Ласкаво просимо!</div>
+            <div class="success-sub">Акаунт успішно створено.<br>Тепер купуйте і продавайте на Торгуй!</div>
+            <button class="sub-btn" onclick="finishReg()">Перейти до оголошень</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CABINET -->
+<div class="page" id="page-cabinet">
+  <div class="cab-wrap">
+    <div class="pg-title">Особистий кабінет</div>
+    <div class="profile-card">
+      <div class="cab-av" id="cab-av">А</div>
+      <div>
+        <div class="prof-name" id="cab-name">Андрій</div>
+        <div class="prof-meta">На сайті з 2024 · Київ</div>
+        <div style="margin-top:6px;display:flex;gap:6px">
+          <span style="font-size:11px;background:#E8F0FD;color:var(--blue);padding:2px 8px;border-radius:4px;font-weight:600">Перевірений</span>
+          <span style="font-size:11px;background:#EAF3DE;color:#2E6B00;padding:2px 8px;border-radius:4px;font-weight:600">★ 4.9</span>
+        </div>
+      </div>
+      <button class="prof-edit">Редагувати</button>
+    </div>
+    <div class="s-cards">
+      <div class="sc"><div class="scn">5</div><div class="scl">Мої оголошення</div></div>
+      <div class="sc" onclick="goPage('favorites')"><div class="scn" id="cab-fav-n">0</div><div class="scl">В обраному</div></div>
+      <div class="sc"><div class="scn">12</div><div class="scl">Продано</div></div>
+    </div>
+    <div class="msec">
+      <div class="mi" onclick="openPost()"><div class="mi-icon" style="background:#E8F0FD">📝</div><div style="flex:1"><div>Подати оголошення</div><div class="mi-sub">Продай швидко і вигідно</div></div><div class="mi-arr">›</div></div>
+      <div class="mi" onclick="goPage('chat')"><div class="mi-icon" style="background:#EAF3DE">💬</div><div style="flex:1"><div>Повідомлення</div><div class="mi-sub">2 непрочитаних</div></div><div class="mi-arr">›</div></div>
+      <div class="mi" onclick="goPage('pricing')"><div class="mi-icon" style="background:#FEF3E2">⭐</div><div style="flex:1"><div>Тарифи та просування</div><div class="mi-sub">Більше переглядів</div></div><div class="mi-arr">›</div></div>
+      <div class="mi" onclick="goPage('map')"><div class="mi-icon" style="background:#F0EAFA">🗺</div><div style="flex:1"><div>Оголошення на карті</div></div><div class="mi-arr">›</div></div>
+    </div>
+    <div class="msec">
+      <div class="mi"><div class="mi-icon" style="background:var(--bg2)">⚙️</div><div style="flex:1">Налаштування</div><div class="mi-arr">›</div></div>
+      <div class="mi"><div class="mi-icon" style="background:var(--bg2)">🛡️</div><div style="flex:1">Безпека</div><div class="mi-arr">›</div></div>
+      <div class="mi"><div class="mi-icon" style="background:var(--bg2)">❓</div><div style="flex:1">Допомога</div><div class="mi-arr">›</div></div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">Вийти з акаунту</button>
+    <div style="text-align:center;margin-top:14px;font-size:11px;color:var(--text3)">Торгуй! UA · v1.0.0 · 2024</div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-item active" id="nav-home" onclick="goPage('home')">
+    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Головна
+  </button>
+  <button class="nav-item" id="nav-map" onclick="goPage('map')">
+    <svg viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>Карта
+  </button>
+  <button class="nav-post-btn" onclick="openPost()">
+    <div class="post-circle"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+    <span style="font-size:11px;margin-top:2px">Подати</span>
+  </button>
+  <button class="nav-item" id="nav-chat" onclick="goPage('chat')">
+    <div class="nbadge">2</div>
+    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Чати
+  </button>
+  <button class="nav-item" id="nav-cabinet" onclick="goPage('cabinet')">
+    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Кабінет
+  </button>
+</div>
+
+<!-- POST MODAL -->
+<div class="modal-bd" id="post-modal">
+  <div class="modal">
+    <div class="mhdr"><div class="mtitle">Нове оголошення</div><button class="mclose" onclick="closePost()">×</button></div>
+    <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px">📸 Фото (до 10 шт.)</div>
+    <div class="photo-upload" onclick="document.getElementById('ph-input').click()">
+      <input type="file" id="ph-input" accept="image/*" multiple onchange="handlePhotos(this)" style="display:none">
+      <div style="font-size:30px;margin-bottom:8px">📷</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:3px">Клікни або перетягни фото</div>
+      <div style="font-size:13px;color:var(--text3)">JPG, PNG · до 10 МБ кожне</div>
+      <div class="ph-previews" id="ph-previews"></div>
+    </div>
+    <div class="fg"><label>Категорія</label><select class="fi fw"><option>Електроніка</option><option>Авто</option><option>Нерухомість</option><option>Одяг</option><option>Для дому</option><option>Спорт</option></select></div>
+    <div class="fg"><label>Заголовок</label><input class="fi fw" type="text" placeholder="Наприклад: iPhone 15 Pro 256GB"/></div>
+    <div class="fg"><label>Опис</label><textarea class="fi fw" placeholder="Стан, комплектація, причина продажу..."></textarea></div>
+    <div class="fg-row">
+      <div class="fg"><label>Ціна, ₴</label><input class="fi fw" type="number" placeholder="0"/></div>
+      <div class="fg"><label>Місто</label><input class="fi fw" type="text" placeholder="Ваше місто"/></div>
+    </div>
+    <div class="fg-row">
+      <div class="fg"><label>Стан</label><select class="fi fw"><option>Нове</option><option>Вживане — добрий стан</option><option>Вживане — задовільний стан</option></select></div>
+      <div class="fg"><label>Телефон</label><input class="fi fw" type="text" placeholder="+380..."/></div>
+    </div>
+    <button class="msubmit" onclick="submitAd()">Опублікувати оголошення 🚀</button>
+  </div>
+</div>
+
+<script>
+const ADS=[
+  {id:1,emoji:'📱',title:'iPhone 15 Pro 256GB Natural Titanium',price:'36 500',cat:'electronics',city:'Київ',lat:50.450,lng:30.523,date:'сьогодні',isNew:true,top:true,desc:'Повністю робочий, без подряпин. Повний комплект, чек є. Використовувався 3 місяці. Face ID 97% акумулятор.',seller:'Олексій К.',since:'2021'},
+  {id:2,emoji:'🚗',title:'Toyota Camry 2020 2.5 AT',price:'920 000',cat:'auto',city:'Харків',lat:49.992,lng:36.231,date:'вчора',isNew:false,top:false,desc:'Один власник, пробіг 45 000 км. Всі ТО пройдені у офіційного дилера. Без ДТП.',seller:'Автосалон Плюс',since:'2018'},
+  {id:3,emoji:'🛋️',title:'Диван кутовий IKEA Söderhamn',price:'7 200',cat:'home',city:'Київ',lat:50.420,lng:30.560,date:'2 дні тому',isNew:false,top:false,desc:'Відмінний стан, колір сірий, 270×170 см. Самовивіз з Подолу.',seller:'Марина В.',since:'2023'},
+  {id:4,emoji:'👟',title:'Nike Air Max 90 43 розмір',price:'1 600',cat:'clothes',city:'Одеса',lat:46.469,lng:30.740,date:'сьогодні',isNew:true,top:false,desc:'Оригінал, носились 2 рази. EU 43. Куплені в офіційному магазині.',seller:'Сергій М.',since:'2022'},
+  {id:5,emoji:'💻',title:'MacBook Pro 14" M3 Pro 18/512',price:'56 000',cat:'electronics',city:'Київ',lat:50.462,lng:30.510,date:'3 год. тому',isNew:true,top:true,desc:'Новий, запечатаний. Гарантія Apple 1 рік. Чек з магазину.',seller:'TechStore',since:'2019'},
+  {id:6,emoji:'🏠',title:'2-кімн. квартира, 58 м², центр',price:'2 100 000',cat:'realty',city:'Львів',lat:49.839,lng:24.029,date:'вчора',isNew:false,top:false,desc:'Центр, ремонт 2022 р., 2 поверх з 5, нові меблі.',seller:'Агентство Home',since:'2015'},
+  {id:7,emoji:'🚲',title:'Велосипед Trek Marlin 7 2023',price:'12 500',cat:'sport',city:'Дніпро',lat:48.464,lng:35.046,date:'4 дні тому',isNew:false,top:false,desc:'Гірський, один сезон, ідеальний стан.',seller:'Віктор Л.',since:'2020'},
+  {id:8,emoji:'🎮',title:'PlayStation 5 + 3 гри',price:'16 000',cat:'electronics',city:'Київ',lat:50.480,lng:30.490,date:'сьогодні',isNew:false,top:false,desc:'PS5 дискова версія, ліцензійні ігри. Через переїзд.',seller:'Діма П.',since:'2022'},
+  {id:9,emoji:'🐕',title:'Цуценята лабрадора, 2 міс.',price:'5 800',cat:'animals',city:'Київ',lat:50.435,lng:30.575,date:'2 дні тому',isNew:true,top:false,desc:'Чистокровні, всі щеплення, ветпаспорт.',seller:'Розплідник Лапа',since:'2016'},
+  {id:10,emoji:'📷',title:'Sony Alpha A7 IV body',price:'65 000',cat:'electronics',city:'Одеса',lat:46.490,lng:30.720,date:'тиждень тому',isNew:true,top:true,desc:'Новий в упаковці. Торг доречний.',seller:'PhotoPro',since:'2017'},
+  {id:11,emoji:'👔',title:'Пальто чоловіче Hugo Boss L',price:'3 000',cat:'clothes',city:'Харків',lat:50.005,lng:36.260,date:'вчора',isNew:false,top:false,desc:'Оригінал, розмір L, один сезон.',seller:'Іван Т.',since:'2023'},
+  {id:12,emoji:'🛁',title:'Пральна машина Bosch 7кг',price:'5 800',cat:'home',city:'Дніпро',lat:48.450,lng:35.070,date:'3 дні тому',isNew:false,top:false,desc:'3 роки, робочий стан.',seller:'Оля К.',since:'2021'},
+  {id:13,emoji:'🏡',title:'Будинок 120м² з ділянкою',price:'3 800 000',cat:'realty',city:'Буча',lat:50.547,lng:30.342,date:'2 дні тому',isNew:true,top:false,desc:'Новобудова 2023 р., 10 соток.',seller:'ЖК Затишний',since:'2020'},
+  {id:14,emoji:'🛻',title:'Ford Ranger 2022 4x4',price:'1 450 000',cat:'auto',city:'Запоріжжя',lat:47.838,lng:35.139,date:'вчора',isNew:false,top:true,desc:'Дизель, автомат, пробіг 28 000.',seller:'AutoMax',since:'2018'},
+  {id:15,emoji:'🎸',title:'Гітара Gibson Les Paul 2019',price:'28 000',cat:'home',city:'Львів',lat:49.850,lng:24.015,date:'тиждень тому',isNew:false,top:false,desc:'USA 2019, ідеальний стан, оригінальний кейс.',seller:'Музикант',since:'2022'},
+];
+
+const chatData=[
+  {name:'Олексій К.',color:'#1B6FE4',msgs:[{mine:false,text:'Привіт! Ще актуально?',time:'14:20'},{mine:true,text:'Так, актуально! В ідеальному стані.',time:'14:25'},{mine:false,text:'Знижку зробите? Готовий за 34 000',time:'14:30'},{mine:true,text:'Можу 35 000 — це остання ціна',time:'14:31'},{mine:false,text:'Добре, домовились! Коли можна приїхати?',time:'14:32'}]},
+  {name:'Марина В.',color:'#3B6D11',msgs:[{mine:false,text:'Добрий день! Коли можна забрати диван?',time:'вчора'},{mine:true,text:'Будь-якого дня після 18:00',time:'вчора'},{mine:false,text:'Дякую, домовились!',time:'вчора'}]},
+  {name:'TechStore',color:'#C07A10',msgs:[{mine:false,text:'Цікавить MacBook, є ще?',time:'пн'},{mine:true,text:'Так, є! Новий.',time:'пн'},{mine:false,text:'Можемо зустрітись у середу?',time:'пн'}]},
+];
+
+let currentCat='all',searchQ='',favorites=new Set(),isLoggedIn=false,activeChat=0,mapObj=null,mapMarkers=[];
+
+function adCard(a){
+  return`<div class="ad-card" onclick="openDetail(${a.id})">
+    <div class="ad-img">${a.emoji}</div>
+    <div class="ad-body">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
+        <div>${a.top?'<span class="abd abd-top">ТОП</span>':''} ${a.isNew?'<span class="abd abd-new">Нове</span>':''}</div>
+        <button class="fav-btn ${favorites.has(a.id)?'active':''}" onclick="toggleFav(event,${a.id})">${favorites.has(a.id)?'♥':'♡'}</button>
+      </div>
+      <div class="ad-price">${a.price} ₴</div>
+      <div class="ad-title">${a.title}</div>
+      <div class="ad-meta"><span>${a.city}</span><span>${a.date}</span></div>
+    </div>
+  </div>`;
+}
+
+function renderAds(){
+  const f=ADS.filter(a=>(currentCat==='all'||a.cat===currentCat)&&(!searchQ||a.title.toLowerCase().includes(searchQ.toLowerCase())));
+  document.getElementById('rcnt').textContent='Знайдено '+f.length+' оголошень';
+  document.getElementById('ads-grid').innerHTML=f.map(adCard).join('');
+  renderFavs();
+}
+
+function renderFavs(){
+  const fa=ADS.filter(a=>favorites.has(a.id));
+  const el=document.getElementById('cab-fav-n');if(el)el.textContent=fa.length;
+  const fg=document.getElementById('fav-grid'),fe=document.getElementById('fav-empty');
+  if(fa.length){fg.innerHTML=fa.map(adCard).join('');fg.style.display='';fe.style.display='none';}
+  else{fg.style.display='none';fe.style.display='block';}
+}
+
+function openDetail(id){
+  const a=ADS.find(x=>x.id===id);if(!a)return;
+  document.getElementById('det-main-img').textContent=a.emoji;
+  document.getElementById('det-price').textContent=a.price+' ₴';
+  document.getElementById('det-title').textContent=a.title;
+  document.getElementById('det-desc').textContent=a.desc;
+  document.getElementById('det-city').textContent='📍 '+a.city;
+  document.getElementById('det-seller-av').textContent=a.seller[0];
+  document.getElementById('det-seller-name').textContent=a.seller;
+  document.getElementById('det-seller-since').textContent='На сайті з '+a.since+' року';
+  document.getElementById('det-meta').innerHTML=`<span class="det-tag">${a.city}</span><span class="det-tag">${a.date}</span>${a.isNew?'<span class="det-tag" style="background:#E8F0FD;color:var(--blue)">Нове</span>':''}`;
+  document.getElementById('det-thumbs').innerHTML=[a.emoji,'🖼','🖼','🖼'].map((e,i)=>`<div class="thumb ${i===0?'active':''}" onclick="selThumb(this,'${e}')">${e}</div>`).join('');
+  goPage('detail');
+}
+
+function selThumb(el,em){document.querySelectorAll('.thumb').forEach(t=>t.classList.remove('active'));el.classList.add('active');document.getElementById('det-main-img').textContent=em;}
+
+function setCat(el,cat){document.querySelectorAll('.nav-cat').forEach(n=>n.classList.remove('active'));el.classList.add('active');currentCat=cat;renderAds();}
+function doSearch(){searchQ=document.getElementById('search-input').value;renderAds();}
+document.getElementById('search-input').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
+function toggleFav(e,id){e.stopPropagation();if(favorites.has(id))favorites.delete(id);else favorites.add(id);renderAds();}
+
+function goPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const ni=document.getElementById('nav-'+name);if(ni)ni.classList.add('active');
+  if(name==='favorites')renderFavs();
+  if(name==='chat')renderChat();
+  if(name==='map')initMap();
+}
+
+// MAP
+function initMap(){
+  if(mapObj)return;
+  mapObj=L.map('map').setView([48.5,31.5],6);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(mapObj);
+  renderMapAds('all');
+}
+
+function renderMapAds(cat){
+  mapMarkers.forEach(m=>mapObj.removeLayer(m));mapMarkers=[];
+  const list=document.getElementById('map-ad-list');list.innerHTML='';
+  const f=cat==='all'?ADS:ADS.filter(a=>a.cat===cat);
+  document.getElementById('map-count').textContent=f.length;
+  f.forEach(a=>{
+    const color=a.top?'#F5A623':'#1B6FE4';
+    const icon=L.divIcon({className:'',html:`<div style="width:36px;height:36px;background:${color};border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);font-size:14px">${a.emoji}</span></div>`,iconSize:[36,36],iconAnchor:[18,36],popupAnchor:[0,-36]});
+    const m=L.marker([a.lat,a.lng],{icon}).addTo(mapObj);
+    m.bindPopup(`<div style="min-width:180px"><div style="font-size:24px;text-align:center;margin-bottom:6px">${a.emoji}</div><div style="font-size:15px;font-weight:700;color:#1B6FE4">${a.price} ₴</div><div style="font-size:13px;margin:3px 0">${a.title}</div><div style="font-size:11px;color:#999">📍 ${a.city}</div><button onclick="openDetail(${a.id})" style="margin-top:8px;width:100%;padding:7px;background:#1B6FE4;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">Переглянути →</button></div>`,{maxWidth:220});
+    mapMarkers.push(m);
+    const card=document.createElement('div');
+    card.className='map-ad-card';
+    card.innerHTML=`<div class="map-ad-img">${a.emoji}</div><div style="flex:1;min-width:0"><div class="map-ad-price">${a.price} ₴</div><div class="map-ad-title">${a.title}</div><div class="map-ad-city">📍 ${a.city}</div></div>`;
+    card.onclick=()=>{mapObj.setView([a.lat,a.lng],13);m.openPopup();};
+    list.appendChild(card);
+  });
+}
+
+function filterMapCat(cat){renderMapAds(cat);}
+
+// CHAT
+function renderChat(){
+  const d=chatData[activeChat];
+  document.getElementById('chat-hdr-av').textContent=d.name[0];
+  document.getElementById('chat-hdr-av').style.background=d.color;
+  document.getElementById('chat-hdr-name').textContent=d.name;
+  const box=document.getElementById('chat-messages');
+  box.innerHTML=d.msgs.map(m=>`<div class="msg-row ${m.mine?'mine':''}">
+    ${!m.mine?`<div class="msg-av" style="background:${d.color}">${d.name[0]}</div>`:''}
+    <div class="msg-bubble">${m.text}<div class="msg-time-lbl">${m.time}</div></div>
+  </div>`).join('');
+  box.scrollTop=box.scrollHeight;
+}
+
+function selectChat(i){activeChat=i;document.querySelectorAll('.chat-item').forEach((c,j)=>c.classList.toggle('active',j===i));renderChat();}
+function sendMsg(){const i=document.getElementById('chat-input');const t=i.value.trim();if(!t)return;chatData[activeChat].msgs.push({mine:true,text:t,time:'зараз'});i.value='';renderChat();}
+
+// AUTH
+let regUser={};
+function switchTab(tab){
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',i===(tab==='login'?0:1)));
+  document.getElementById('auth-login').style.display=tab==='login'?'block':'none';
+  document.getElementById('auth-register').style.display=tab==='register'?'block':'none';
+}
+
+function showErr(id,s){const e=document.getElementById(id);if(e)e.classList.toggle('show',s);}
+function toggleEye(id,el){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';el.textContent=i.type==='password'?'👁':'🙈';}
+
+function doLogin(){
+  const p=document.getElementById('l-phone').value.trim(),pw=document.getElementById('l-pass').value;
+  let ok=true;
+  if(!p){showErr('l-phone-err',true);ok=false;}else showErr('l-phone-err',false);
+  if(pw.length<6){showErr('l-pass-err',true);ok=false;}else showErr('l-pass-err',false);
+  if(!ok)return;
+  isLoggedIn=true;regUser.name=p.includes('@')?p.split('@')[0]:'Користувач';
+  updateHeader();goPage('home');
+}
+
+function showStep(n){['rs1','rs2','rs3','rs-ok'].forEach((id,i)=>document.getElementById(id).style.display=i===(n-1)?'block':'none');}
+
+function regS1(){
+  const name=document.getElementById('r-name').value.trim(),phone=document.getElementById('r-phone').value.trim(),email=document.getElementById('r-email').value.trim();
+  let ok=true;
+  if(!name){showErr('r-name-err',true);ok=false;}else showErr('r-name-err',false);
+  if(!phone){showErr('r-phone-err',true);ok=false;}else showErr('r-phone-err',false);
+  if(!email||!email.includes('@')){showErr('r-email-err',true);ok=false;}else showErr('r-email-err',false);
+  if(!ok)return;
+  regUser.name=name;document.getElementById('sent-ph').textContent=phone;
+  showStep(2);document.querySelectorAll('.otp-i')[0].focus();
+}
+
+function regS2(){
+  const code=[...document.querySelectorAll('.otp-i')].map(i=>i.value).join('');
+  if(code.length<4){return;}
+  showStep(3);
+}
+
+function regS3(){
+  const p=document.getElementById('r-pass').value,p2=document.getElementById('r-pass2').value,ag=document.getElementById('r-agree').checked;
+  let ok=true;
+  if(p.length<6){showErr('r-pass-err',true);ok=false;}else showErr('r-pass-err',false);
+  if(p!==p2){showErr('r-pass2-err',true);ok=false;}else showErr('r-pass2-err',false);
+  if(!ag){showErr('r-agree-err',true);ok=false;}else showErr('r-agree-err',false);
+  if(!ok)return;
+  showStep(4);
+}
+
+function finishReg(){isLoggedIn=true;updateHeader();goPage('home');}
+function otpN(el,i){if(el.value.length===1){const inputs=document.querySelectorAll('.otp-i');if(i<3)inputs[i+1].focus();}}
+function showForgot(){document.getElementById('auth-login').innerHTML=`<div style="text-align:center;margin-bottom:1.25rem"><div style="font-size:15px;font-weight:700;margin-bottom:4px">Відновлення паролю</div><div style="font-size:13px;color:var(--text3)">Введіть email — надішлемо посилання</div></div><div class="fg"><label>Email</label><input class="fi fw" type="email" placeholder="your@email.com"/></div><button class="sub-btn" onclick="alert('Лист надіслано!')">Надіслати посилання</button><button class="back-btn" onclick="switchTab('login')">← Назад</button>`;}
+function socialLogin(p){isLoggedIn=true;regUser.name=p+' User';updateHeader();goPage('home');}
+
+function updateHeader(){
+  const hr=document.getElementById('hdr-right');
+  if(isLoggedIn){hr.innerHTML=`<div class="mini-av" onclick="goPage('cabinet')" title="Кабінет">${(regUser.name||'У')[0].toUpperCase()}</div><button class="btn-post-hdr" onclick="openPost()">+ Подати</button>`;document.getElementById('cab-name').textContent=regUser.name||'Користувач';document.getElementById('cab-av').textContent=(regUser.name||'У')[0].toUpperCase();}
+  else{hr.innerHTML=`<button class="btn-login" onclick="goPage('auth')">Увійти</button><button class="btn-post-hdr" onclick="openPost()">+ Подати</button>`;}
+}
+
+function doLogout(){isLoggedIn=false;updateHeader();goPage('home');}
+function openPost(){document.getElementById('post-modal').classList.add('open');}
+function closePost(){document.getElementById('post-modal').classList.remove('open');}
+document.getElementById('post-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closePost();});
+function submitAd(){closePost();alert('Оголошення опубліковано на Торгуй! UA 🎉');}
+function handlePhotos(input){const prev=document.getElementById('ph-previews');[...input.files].slice(0,10).forEach(file=>{const r=new FileReader();r.onload=e=>{const d=document.createElement('div');d.className='ph-prev';d.innerHTML=`<img src="${e.target.result}"><button class="ph-del" onclick="this.parentNode.remove()">×</button>`;prev.appendChild(d);};r.readAsDataURL(file);});}
+
+renderAds();
+</script>
+</body>
+</html>
